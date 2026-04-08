@@ -10,7 +10,7 @@ const { initializeSocket } = require("./socket");
 
 const PORT = process.env.PORT || 5000;
 
-const start
+const startServer = async () => {
     try{
         await connectDB();
 
