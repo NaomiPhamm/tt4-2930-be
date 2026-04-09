@@ -1,10 +1,12 @@
+require("dotenv").config();
+
 const { connectDB } = require("./config/db");
 const app = require("./app");
 
 const startServer = async () => {
     try {
         console.log("1. Starting server...");
-        
+
         await connectDB();
         console.log("2. Database connected");
 
