@@ -17,21 +17,28 @@ export class TaskService {
   private readonly http = inject(HttpClient);
 
   getTasks() {
-    return this.http.get<ApiResponse<{ tasks: TaskItem[] }>>(`${environment.apiUrl}/tasks`);
+    return this.http.get<ApiResponse<{ tasks: TaskItem[] }>>(
+      `${environment.apiUrl}/tasks`
+    );
   }
 
   createTask(payload: TaskPayload) {
-    return this.http.post<ApiResponse<{ task: TaskItem }>>(`${environment.apiUrl}/tasks`, payload);
+    return this.http.post<ApiResponse<{ task: TaskItem }>>(
+      `${environment.apiUrl}/tasks`,
+      payload
+    );
   }
 
   updateTask(taskId: string, payload: TaskPayload) {
     return this.http.patch<ApiResponse<{ task: TaskItem }>>(
       `${environment.apiUrl}/tasks/${taskId}`,
-      payload,
+      payload
     );
   }
 
   deleteTask(taskId: string) {
-    return this.http.delete<ApiResponse<{ task: TaskItem }>>(`${environment.apiUrl}/tasks/${taskId}`);
+    return this.http.delete<ApiResponse<null>>(
+      `${environment.apiUrl}/tasks/${taskId}`
+    );
   }
 }

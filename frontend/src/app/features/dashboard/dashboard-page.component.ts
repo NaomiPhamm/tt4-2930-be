@@ -44,8 +44,16 @@ export class DashboardPageComponent {
   });
 
   constructor() {
-    this.realtimeService.connect(() => this.refreshTasks());
-    this.destroyRef.onDestroy(() => { this.realtimeService.disconnect() });
+    this.realtimeService.connect(
+      () => this.refreshTasks(),
+      () => this.refreshTasks(),
+      () => this.refreshTasks()
+    );
+
+    this.destroyRef.onDestroy(() => {
+      this.realtimeService.disconnect();
+    });
+
     this.loadDashboard();
   }
 
@@ -80,6 +88,7 @@ export class DashboardPageComponent {
 
   submitTask(): void {
     const currentUser = this.currentUser();
+
     if (!currentUser) {
       return;
     }
@@ -93,7 +102,9 @@ export class DashboardPageComponent {
     }
 
     const payload = editingTask && !isOwner
-      ? { done: this.taskForm.controls.done.getRawValue() }
+      ? {
+          done: this.taskForm.controls.done.getRawValue(),
+        }
       : {
           title: this.taskForm.controls.title.getRawValue(),
           description: this.taskForm.controls.description.getRawValue(),
@@ -108,19 +119,22 @@ export class DashboardPageComponent {
       ? this.taskService.updateTask(editingTask._id, payload)
       : this.taskService.createTask(payload);
 
-    request$.pipe(finalize(() => this.isSavingTask.set(false))).subscribe({
-      next: () => {
-        this.resetForm();
-        this.refreshTasks();
-      },
-      error: (error) => {
-        this.pageError.set(error.error?.message ?? 'Could not save the task.');
-      },
-    });
+    request$
+      .pipe(finalize(() => this.isSavingTask.set(false)))
+      .subscribe({
+        next: () => {
+          this.resetForm();
+          this.refreshTasks();
+        },
+        error: (error) => {
+          this.pageError.set(error.error?.message ?? 'Could not save the task.');
+        },
+      });
   }
 
   editTask(task: TaskItem): void {
     this.editingTaskId.set(task._id);
+
     this.taskForm.patchValue({
       title: task.title,
       description: task.description,
@@ -145,6 +159,7 @@ export class DashboardPageComponent {
         if (this.editingTaskId() === task._id) {
           this.resetForm();
         }
+
         this.refreshTasks();
       },
       error: (error) => {
@@ -160,6 +175,7 @@ export class DashboardPageComponent {
 
   resetForm(): void {
     this.editingTaskId.set(null);
+
     this.taskForm.reset({
       title: '',
       description: '',
