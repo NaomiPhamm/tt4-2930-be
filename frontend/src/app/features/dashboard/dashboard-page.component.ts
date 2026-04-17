@@ -19,6 +19,7 @@ import { RealtimeService } from '../../core/realtime.service';
   styleUrl: './dashboard-page.component.css',
 })
 export class DashboardPageComponent {
+
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly taskService = inject(TaskService);
@@ -44,6 +45,8 @@ export class DashboardPageComponent {
   });
 
   constructor() {
+
+    // realtime socket listeners
     this.realtimeService.connect(
       () => this.refreshTasks(),
       () => this.refreshTasks(),
@@ -66,6 +69,7 @@ export class DashboardPageComponent {
   }
 
   loadDashboard(): void {
+
     this.isLoading.set(true);
     this.pageError.set('');
 
@@ -81,20 +85,26 @@ export class DashboardPageComponent {
           this.users.set(users.data.users);
         },
         error: (error) => {
-          this.pageError.set(error.error?.message ?? 'Could not load the dashboard.');
+          this.pageError.set(
+            error.error?.message ?? 'Could not load the dashboard.'
+          );
         },
       });
   }
 
   submitTask(): void {
+
     const currentUser = this.currentUser();
 
-    if (!currentUser) {
-      return;
-    }
+    if (!currentUser) return;
 
-    const editingTask = this.tasks().find((task) => task._id === this.editingTaskId());
-    const isOwner = editingTask ? editingTask.userId._id === currentUser.id : true;
+    const editingTask = this.tasks().find(
+      (task) => task._id === this.editingTaskId()
+    );
+
+    const isOwner = editingTask
+      ? this.isOwner(editingTask)
+      : true;
 
     if (!editingTask && this.taskForm.controls.title.invalid) {
       this.taskForm.controls.title.markAsTouched();
@@ -109,7 +119,8 @@ export class DashboardPageComponent {
           title: this.taskForm.controls.title.getRawValue(),
           description: this.taskForm.controls.description.getRawValue(),
           priority: this.taskForm.controls.priority.getRawValue(),
-          assignedUserId: this.taskForm.controls.assignedUserId.getRawValue() || null,
+          assignedUserId:
+            this.taskForm.controls.assignedUserId.getRawValue() || null,
           done: this.taskForm.controls.done.getRawValue(),
         };
 
@@ -127,12 +138,15 @@ export class DashboardPageComponent {
           this.refreshTasks();
         },
         error: (error) => {
-          this.pageError.set(error.error?.message ?? 'Could not save the task.');
+          this.pageError.set(
+            error.error?.message ?? 'Could not save the task.'
+          );
         },
       });
   }
 
   editTask(task: TaskItem): void {
+
     this.editingTaskId.set(task._id);
 
     this.taskForm.patchValue({
@@ -145,17 +159,24 @@ export class DashboardPageComponent {
   }
 
   toggleTask(task: TaskItem): void {
-    this.taskService.updateTask(task._id, { done: !task.done }).subscribe({
-      next: () => this.refreshTasks(),
-      error: (error) => {
-        this.pageError.set(error.error?.message ?? 'Could not update the status.');
-      },
-    });
+
+    this.taskService
+      .updateTask(task._id, { done: !task.done })
+      .subscribe({
+        next: () => this.refreshTasks(),
+        error: (error) => {
+          this.pageError.set(
+            error.error?.message ?? 'Could not update the status.'
+          );
+        },
+      });
   }
 
   deleteTask(task: TaskItem): void {
+
     this.taskService.deleteTask(task._id).subscribe({
       next: () => {
+
         if (this.editingTaskId() === task._id) {
           this.resetForm();
         }
@@ -163,17 +184,21 @@ export class DashboardPageComponent {
         this.refreshTasks();
       },
       error: (error) => {
-        this.pageError.set(error.error?.message ?? 'Could not remove the task.');
+        this.pageError.set(
+          error.error?.message ?? 'Could not remove the task.'
+        );
       },
     });
   }
 
   logout(): void {
+
     this.authService.logout();
     this.router.navigateByUrl('/login');
   }
 
   resetForm(): void {
+
     this.editingTaskId.set(null);
 
     this.taskForm.reset({
@@ -185,17 +210,24 @@ export class DashboardPageComponent {
     });
   }
 
-  isOwner(task: TaskItem): boolean {
-    return task.userId._id === this.currentUser()?.id;
-  }
+
+isOwner(task: TaskItem): boolean {
+  const taskOwnerId = task.userId._id;
+  const currentUserId = this.currentUser()?.id;
+
+  return taskOwnerId === currentUserId;
+}
 
   private refreshTasks(): void {
+
     this.taskService.getTasks().subscribe({
       next: (response) => {
         this.tasks.set(response.data.tasks);
       },
       error: (error) => {
-        this.pageError.set(error.error?.message ?? 'Could not reload the tasks.');
+        this.pageError.set(
+          error.error?.message ?? 'Could not reload the tasks.'
+        );
       },
     });
   }
